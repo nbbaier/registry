@@ -2,7 +2,7 @@
 
 A personal [shadcn-compatible registry](https://ui.shadcn.com/docs/registry) for TypeScript utility libraries. Install lib items into any project with the shadcn CLI.
 
-**Live endpoint:** `https://nbbaier-registry.workers.dev` (update after first deploy if your workers.dev subdomain differs)
+**Live endpoint:** `https://nbbaier-registry.nico-baier.workers.dev`
 
 ## Install
 
@@ -10,9 +10,9 @@ Add the registry namespace to your project's `components.json`:
 
 ```json
 {
-  "registries": {
-    "@nbbaier": "https://nbbaier-registry.workers.dev/r/{name}.json"
-  }
+   "registries": {
+      "@nbbaier": "https://nbbaier-registry.nico-baier.workers.dev/r/{name}.json"
+   }
 }
 ```
 
@@ -25,19 +25,19 @@ npx shadcn add @nbbaier/option
 Or install directly by URL:
 
 ```bash
-npx shadcn add https://nbbaier-registry.workers.dev/r/option.json
+npx shadcn add https://nbbaier-registry.nico-baier.workers.dev/r/option.json
 ```
 
 Installed files land in your project's lib directory per your `components.json` aliases (typically `src/lib/`).
 
 ## Available lib items
 
-| Item | Description |
-|------|-------------|
-| `option` | Option type for representing optional values without null/undefined |
-| `result` | Result type for typed error handling without exceptions |
-| `tagged-error` | Mixin factory for discriminated error classes with typed props |
-| `redacted` | Branded type preventing sensitive data from logging/serialization |
+| Item           | Description                                                         |
+| -------------- | ------------------------------------------------------------------- |
+| `option`       | Option type for representing optional values without null/undefined |
+| `result`       | Result type for typed error handling without exceptions             |
+| `tagged-error` | Mixin factory for discriminated error classes with typed props      |
+| `redacted`     | Branded type preventing sensitive data from logging/serialization   |
 
 ## Attribution
 
@@ -62,14 +62,14 @@ bun run smoke             # verify shadcn add works against built option.json
 3. Run `bun test`, `bun run registry:build`, and `bun run smoke`
 4. Push to `main` — CI deploys automatically
 
-### Deploy prerequisites
+### Deploy
 
-Set these GitHub Actions secrets before the first deploy:
+CI deploys to Cloudflare on push to `main`. Required GitHub Actions secrets:
 
 - `CLOUDFLARE_API_TOKEN` — Workers deploy permissions
 - `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID
 
-After first deploy, update `homepage` in `registry.json` if your workers.dev URL differs.
+The live URL is set in `registry.json` as `homepage` and should match the deployed workers.dev subdomain.
 
 ## License
 

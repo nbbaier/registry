@@ -33,7 +33,7 @@ The Cloudflare deployment that serves published artifacts as static assets — n
 _Avoid_: Server, API, backend
 
 **Registry endpoint**:
-The public base URL where the registry is reachable (e.g. `https://registry-xyz.workers.dev`).
+The public base URL where the registry is reachable (e.g. `https://nbbaier-registry.nico-baier.workers.dev`).
 _Avoid_: Domain, CDN URL
 
 **Registry namespace**:
@@ -41,7 +41,7 @@ The `@`-prefixed handle consumers configure in `components.json` to install item
 _Avoid_: Scope, package name
 
 **Consumer registry config**:
-The one-time `components.json` entry that maps a namespace to the registry's item URL pattern (e.g. `"@nbbaier": "https://registry-xyz.workers.dev/r/{name}.json"`).
+The one-time `components.json` entry that maps a namespace to the registry's item URL pattern (e.g. `"@nbbaier": "https://nbbaier-registry.nico-baier.workers.dev/r/{name}.json"`).
 _Avoid_: Registry setup, shadcn config
 
 **Registry dependency**:
@@ -85,7 +85,7 @@ The public identifier in `registry.json` metadata — `"nbbaier"`. Distinct from
 _Avoid_: Package name, project title
 
 **Registry homepage**:
-The URL in `registry.json` pointing to the live registry endpoint. Starts as the `.workers.dev` URL; can migrate to a custom domain later without changing item URL paths.
+The URL in `registry.json` pointing to the live registry endpoint (`https://nbbaier-registry.nico-baier.workers.dev`). Can migrate to a custom domain later without changing item URL paths.
 _Avoid_: Website, docs site
 
 **Build output**:
@@ -180,7 +180,7 @@ _Avoid_: Git repo, remote
 
 **Dev**: What should the registry be called publicly?
 
-**Expert**: `"name": "nbbaier"` in `registry.json`, Wrangler worker `"nbbaier-registry"`, homepage set to your `.workers.dev` URL after first deploy. Matches the `@nbbaier` consumer namespace. Custom domain can come later.
+**Expert**: `"name": "nbbaier"` in `registry.json`, Wrangler worker `"nbbaier-registry"`, homepage at `https://nbbaier-registry.nico-baier.workers.dev`. Matches the `@nbbaier` consumer namespace. Custom domain can come later.
 
 **Dev**: Should `public/r/` be in git?
 

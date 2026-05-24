@@ -1,7 +1,7 @@
 {
 	"$schema": "https://ui.shadcn.com/schema/registry.json",
 	"name": "nbbaier",
-	"homepage": "https://nbbaier-registry.workers.dev",
+	"homepage": "https://nbbaier-registry.nico-baier.workers.dev",
 	"items": [
 		{
 			"name": "option",
