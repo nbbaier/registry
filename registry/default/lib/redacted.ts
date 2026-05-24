@@ -1,64 +1,154 @@
-// Adapted from mulroy.dev (https://github.com/dmmulroy/mulroy.dev)
+const registry = new WeakMap<object, any>();
+const SAFE_PROPS = new Set<string | symbol>([
+	"toString",
+	"toJSON",
+	Symbol.for("nodejs.util.inspect.custom"),
+	Symbol.toStringTag,
+	Symbol.toPrimitive,
+]);
+
+const LOUD_FAILURE_MSG =
+	"Redacted instances cannot be enumerated, cloned, or spread. This prevents accidental data loss. Sensitive data must be unwrapped via Redacted.value(instance).";
+
 /**
- * Branded type representing a value that should not be logged or serialized.
- * Prevents accidental exposure of sensitive data in logs, JSON, or console output.
- * @template A - The type of the underlying secret value
+ * Shared proxy handler to minimize GC overhead.
  */
-export interface Redacted<A> extends Object {}
-
-const registry = new WeakMap<Redacted<any>, any>();
-
-const proto = {
-	toString() {
-		return "<redacted>";
+const REDACTED_HANDLER: ProxyHandler<any> = {
+	get(target, prop, receiver) {
+		if (SAFE_PROPS.has(prop)) {
+			const value = Reflect.get(target, prop, receiver);
+			return typeof value === "function" ? value.bind(target) : value;
+		}
+		throw new Error(
+			`Illegal access to Redacted property "${String(prop)}". ${LOUD_FAILURE_MSG}`,
+		);
 	},
-	toJSON() {
-		return "<redacted>";
+
+	getOwnPropertyDescriptor(target, prop) {
+		// To be spec-compliant, we throw our custom message before the engine
+		// can throw a generic TypeError for invariant violations.
+		if (Reflect.has(target, prop)) {
+			throw new Error(LOUD_FAILURE_MSG);
+		}
+		return undefined;
 	},
-	[Symbol.for("nodejs.util.inspect.custom")]() {
-		return "<redacted>";
+
+	ownKeys() {
+		// Throwing here short-circuits enumeration (Object.keys, spread, for-in)
+		throw new Error(LOUD_FAILURE_MSG);
+	},
+
+	getPrototypeOf() {
+		return null;
+	},
+	setPrototypeOf() {
+		throw new Error("Redacted instances are sealed.");
+	},
+
+	set() {
+		throw new Error("Redacted instances are immutable.");
+	},
+	defineProperty() {
+		throw new Error("Redacted instances are sealed.");
+	},
+	deleteProperty() {
+		throw new Error("Redacted instances are sealed.");
+	},
+	preventExtensions() {
+		return true;
+	},
+	isExtensible() {
+		return false;
 	},
 };
 
-/**
- * Utilities for creating and accessing redacted values.
- * Redacted values hide sensitive data from serialization/logging while
- * allowing controlled access to the underlying value.
- *
- * @example
- * ```ts
- * const secret = Redacted.make('api-key-123');
- * console.log(secret);        // '<redacted>'
- * JSON.stringify(secret);     // '"<redacted>"'
- * Redacted.value(secret);     // 'api-key-123'
- * ```
- */
-export const Redacted = {
-	/**
-	 * Wraps a value in a redacted container.
-	 * @template A - The type of value to redact
-	 * @param value - The sensitive value to protect
-	 * @returns A redacted wrapper that hides the value from serialization
-	 */
-	make<A>(value: A): Redacted<A> {
-		const redacted = Object.create(proto);
-		registry.set(redacted, value);
-		return redacted;
-	},
-	/**
-	 * Extracts the underlying value from a redacted container.
-	 * @template A - The type of the redacted value
-	 * @param self - The redacted container
-	 * @returns The original unwrapped value
-	 * @throws {Error} If the redacted value is not in the registry
-	 */
-	value<A>(self: Redacted<A>): A {
-		const value = registry.get(self);
+class RedactedImpl {
+	// Marker to satisfy Proxy ownKeys requirements if we ever return keys
+	private readonly __redacted_lock__ = true;
 
-		if (value === undefined) {
-			throw new Error("Redacted value was not in registry");
+	constructor() {
+		Object.seal(this);
+	}
+
+	toString() {
+		return "[Redacted]";
+	}
+	toJSON() {
+		return "[Redacted]";
+	}
+	[Symbol.for("nodejs.util.inspect.custom")]() {
+		return "[Redacted]";
+	}
+	get [Symbol.toStringTag]() {
+		return "Redacted";
+	}
+}
+
+/**
+ * A production-grade container for sensitive values.
+ *
+ * DESIGN RATIONALE:
+ * 1. Proxy-based protection: Any attempt to spread, enumerate, or access properties
+ *    directly on a Redacted instance throws a "Loud Failure" error.
+ * 2. Identity Resilience: Registers both the target and the proxy in a WeakMap
+ *    to prevent identity mismatches during internal unwrapping.
+ * 3. Spec-Compliant: Uses property descriptor traps on a sealed target to
+ *    enforce the engineering contract without violating Proxy invariants.
+ *
+ * OPERATIONAL WARNING (Terminal Data Type):
+ * This utility is a "terminal data type." It is designed to crash the process
+ * if passed to third-party libraries that attempt deep cloning or custom
+ * serialization (e.g., Winston, Zod). Use Redacted.sanitize() before logging.
+ */
+export class Redacted<A> {
+	private constructor() {}
+
+	static make<A>(value: A): Redacted<A> {
+		const target = new RedactedImpl();
+		const proxy = new Proxy(target, REDACTED_HANDLER);
+
+		registry.set(target, value);
+		registry.set(proxy, value);
+
+		return proxy as unknown as Redacted<A>;
+	}
+
+	static value<A>(self: Redacted<A>): A {
+		if (!registry.has(self as any)) {
+			throw new Error(
+				"Invalid or uninitialized Redacted reference. The instance may have been cloned, spread, or corrupted.",
+			);
+		}
+		return registry.get(self as any);
+	}
+
+	/**
+	 * Safely sanitizes an object for logging or validation by replacing
+	 * Redacted containers with a placeholder string.
+	 * Handles circular references to prevent stack overflows.
+	 */
+	static sanitize(obj: any, seen = new WeakSet<object>()): any {
+		if (obj === null || typeof obj !== "object") return obj;
+		if (obj instanceof Redacted) return "[Redacted]";
+
+		if (seen.has(obj)) return "[Circular Reference]";
+		seen.add(obj);
+
+		if (Array.isArray(obj)) {
+			return obj.map((item) => Redacted.sanitize(item, seen));
 		}
 
-		return value;
-	},
-} as const;
+		const result: Record<string, any> = {};
+		for (const key of Object.keys(obj)) {
+			result[key] = Redacted.sanitize(obj[key], seen);
+		}
+		return result;
+	}
+
+	/**
+	 * Ensures `instanceof Redacted` works for both the proxy and the target.
+	 */
+	static [Symbol.hasInstance](instance: any) {
+		return registry.has(instance);
+	}
+}
