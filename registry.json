@@ -1,0 +1,55 @@
+{
+	"$schema": "https://ui.shadcn.com/schema/registry.json",
+	"name": "nbbaier",
+	"homepage": "https://nbbaier-registry.workers.dev",
+	"items": [
+		{
+			"name": "option",
+			"type": "registry:lib",
+			"title": "Option",
+			"description": "Option type for representing optional values without null/undefined",
+			"files": [
+				{
+					"path": "registry/default/lib/option.ts",
+					"type": "registry:lib"
+				}
+			]
+		},
+		{
+			"name": "result",
+			"type": "registry:lib",
+			"title": "Result",
+			"description": "Result type for typed error handling without exceptions",
+			"files": [
+				{
+					"path": "registry/default/lib/result.ts",
+					"type": "registry:lib"
+				}
+			]
+		},
+		{
+			"name": "tagged-error",
+			"type": "registry:lib",
+			"title": "TaggedError",
+			"description": "Mixin factory for discriminated error classes with typed props",
+			"files": [
+				{
+					"path": "registry/default/lib/tagged-error.ts",
+					"type": "registry:lib"
+				}
+			]
+		},
+		{
+			"name": "redacted",
+			"type": "registry:lib",
+			"title": "Redacted",
+			"description": "Branded type preventing sensitive data from logging/serialization",
+			"files": [
+				{
+					"path": "registry/default/lib/redacted.ts",
+					"type": "registry:lib"
+				}
+			]
+		}
+	]
+}
