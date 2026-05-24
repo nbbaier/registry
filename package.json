@@ -8,7 +8,7 @@
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
-    "registry:build": "shadcn build -o public/r && cp registry.json public/r/registry.json",
+		"registry:build": "shadcn build -o public/r && cp registry.json public/r/registry.json",
 		"preview": "wrangler dev",
 		"smoke": "bun run scripts/smoke-test.ts"
 	},
