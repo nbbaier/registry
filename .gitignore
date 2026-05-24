@@ -2,3 +2,4 @@ node_modules
 .wrangler
 .dev.vars*
 public/r
+.cursor/hooks/state/continual-learning.json

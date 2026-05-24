@@ -65,9 +65,6 @@ const REDACTED_HANDLER: ProxyHandler<any> = {
 };
 
 class RedactedImpl {
-	// Marker to satisfy Proxy ownKeys requirements if we ever return keys
-	private readonly __redacted_lock__ = true;
-
 	constructor() {
 		Object.seal(this);
 	}
@@ -102,7 +99,7 @@ class RedactedImpl {
  * if passed to third-party libraries that attempt deep cloning or custom
  * serialization (e.g., Winston, Zod). Use Redacted.sanitize() before logging.
  */
-export class Redacted<A> {
+export class Redacted<_A> {
 	private constructor() {}
 
 	static make<A>(value: A): Redacted<A> {
