@@ -1,3 +1,5 @@
+// Adapted from https://gist.github.com/daliborgogic/0cddc4eb6f365e932932b8ef44d4d49b
+
 import { describe, expect, it } from "vitest";
 import { Redacted } from "./redacted";
 
