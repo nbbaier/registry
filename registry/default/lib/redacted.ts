@@ -1,3 +1,6 @@
+// Adapted from https://gist.github.com/daliborgogic/0cddc4eb6f365e932932b8ef44d4d49b
+
+
 const registry = new WeakMap<object, any>();
 const SAFE_PROPS = new Set<string | symbol>([
 	"toString",
