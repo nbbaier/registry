@@ -1,5 +1,3 @@
-# nbbaier registry
-
 A personal [shadcn-compatible registry](https://ui.shadcn.com/docs/registry) for TypeScript utility libraries. Install lib items into any project with the shadcn CLI.
 
 **Live endpoint:** `https://nbbaier-registry.nico-baier.workers.dev`
