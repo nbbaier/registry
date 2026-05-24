@@ -13,6 +13,23 @@ type InferErr<R> = R extends Result<unknown, infer E> ? E : never;
 type InferAsyncOk<R> = R extends AsyncResult<infer T, unknown> ? T : never;
 type InferAsyncErr<R> = R extends AsyncResult<unknown, infer E> ? E : never;
 
+type ChainResult =
+	| Result<unknown, unknown>
+	| AsyncResult<unknown, unknown>
+	| Promise<Result<unknown, unknown>>;
+
+function normalizeChainResult(
+	result: ChainResult,
+): Result<unknown, unknown> | AsyncResult<unknown, unknown> {
+	if (result instanceof AsyncResult) {
+		return result;
+	}
+	if (result instanceof Promise) {
+		return new AsyncResult(result);
+	}
+	return result;
+}
+
 /**
  * Success variant of Result.
  *
@@ -89,14 +106,9 @@ export class Ok<A, E = never> {
 			| AsyncResult<unknown, unknown>
 			| Promise<Result<unknown, unknown>>,
 	): Result<unknown, unknown> | AsyncResult<unknown, unknown> {
-		const result = fn(this.value);
-		if (result instanceof AsyncResult) {
-			return result;
-		}
-		if (result instanceof Promise) {
-			return new AsyncResult(result);
-		}
-		return result;
+		return normalizeChainResult(fn(this.value)) as
+			| Result<unknown, unknown>
+			| AsyncResult<unknown, unknown>;
 	}
 
 	/**
@@ -197,16 +209,10 @@ export class Err<E, A = never> {
 	 * Transform the success value. No-op for Err.
 	 *
 	 * @param _fn - Transform function (not called)
-	 * @returns This Err with new success type, wrapped in AsyncResult if async fn detected
+	 * @returns This Err with new success type
 	 */
-	map<U>(_fn: (value: A) => Promise<U>): AsyncResult<U, E>;
-	map<U>(_fn: (value: A) => U): Result<U, E>;
-	map<U>(fn: (value: A) => U | Promise<U>): Result<U, E> | AsyncResult<U, E> {
+	map<U>(_fn: (value: A) => U): Result<U, E> {
 		// SAFETY: A is phantom in Err
-		// Detect async function to return correct type
-		if (fn.constructor.name === "AsyncFunction") {
-			return new AsyncResult(Promise.resolve(this as unknown as Err<E>));
-		}
 		return this as unknown as Err<E>;
 	}
 
@@ -223,31 +229,13 @@ export class Err<E, A = never> {
 	/**
 	 * Chain a Result-returning function on success. No-op for Err.
 	 *
-	 * @param _fn - Function returning Result, AsyncResult, or Promise<Result> (not called)
-	 * @returns This Err, wrapped in AsyncResult if async fn detected
+	 * @param _fn - Function returning Result (not called)
+	 * @returns This Err with new success type
 	 */
 	andThen<R extends Result<unknown, unknown>>(
 		_fn: (value: A) => R,
-	): Result<InferOk<R>, E | InferErr<R>>;
-	andThen<R extends AsyncResult<unknown, unknown>>(
-		_fn: (value: A) => R,
-	): AsyncResult<InferAsyncOk<R>, E | InferAsyncErr<R>>;
-	andThen<U, F>(
-		_fn: (value: A) => Promise<Result<U, F>>,
-	): AsyncResult<U, E | F>;
-	andThen(
-		fn: (
-			value: A,
-		) =>
-			| Result<unknown, unknown>
-			| AsyncResult<unknown, unknown>
-			| Promise<Result<unknown, unknown>>,
-	): Result<unknown, unknown> | AsyncResult<unknown, unknown> {
+	): Result<InferOk<R>, E | InferErr<R>> {
 		// SAFETY: A is phantom in Err
-		// Detect async function to return correct type
-		if (fn.constructor.name === "AsyncFunction") {
-			return new AsyncResult(Promise.resolve(this as unknown as Err<E>));
-		}
 		return this as unknown as Err<E>;
 	}
 
@@ -272,14 +260,9 @@ export class Err<E, A = never> {
 			| AsyncResult<A, unknown>
 			| Promise<Result<A, unknown>>,
 	): Result<A, unknown> | AsyncResult<A, unknown> {
-		const result = fn(this.error);
-		if (result instanceof AsyncResult) {
-			return result;
-		}
-		if (result instanceof Promise) {
-			return new AsyncResult(result);
-		}
-		return result;
+		return normalizeChainResult(fn(this.error)) as
+			| Result<A, unknown>
+			| AsyncResult<A, unknown>;
 	}
 
 	/**
@@ -387,7 +370,7 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 	/**
 	 * Chain a Result-returning function on success.
 	 *
-	 * @param fn - Function returning Result or AsyncResult
+	 * @param fn - Function returning Result, AsyncResult, or Promise<Result>
 	 * @returns AsyncResult from fn
 	 */
 	andThen<R extends Result<unknown, unknown>>(
@@ -396,13 +379,19 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 	andThen<R extends AsyncResult<unknown, unknown>>(
 		fn: (value: A) => R,
 	): AsyncResult<InferAsyncOk<R>, E | InferAsyncErr<R>>;
+	andThen<U, F>(fn: (value: A) => Promise<Result<U, F>>): AsyncResult<U, E | F>;
 	andThen(
-		fn: (value: A) => Result<unknown, unknown> | AsyncResult<unknown, unknown>,
+		fn: (
+			value: A,
+		) =>
+			| Result<unknown, unknown>
+			| AsyncResult<unknown, unknown>
+			| Promise<Result<unknown, unknown>>,
 	): AsyncResult<unknown, unknown> {
 		return new AsyncResult(
 			this.promise.then(async (result) => {
 				if (result.isOk()) {
-					const next = fn(result.value);
+					const next = normalizeChainResult(fn(result.value));
 					if (next instanceof AsyncResult) {
 						return next.promise;
 					}
@@ -410,7 +399,7 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 				}
 				return result;
 			}),
-		);
+		) as AsyncResult<unknown, unknown>;
 	}
 
 	/**
@@ -425,13 +414,19 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 	orElse<R extends AsyncResult<A, unknown>>(
 		fn: (error: E) => R,
 	): AsyncResult<A, InferAsyncErr<R>>;
+	orElse<F>(fn: (error: E) => Promise<Result<A, F>>): AsyncResult<A, F>;
 	orElse(
-		fn: (error: E) => Result<A, unknown> | AsyncResult<A, unknown>,
+		fn: (
+			error: E,
+		) =>
+			| Result<A, unknown>
+			| AsyncResult<A, unknown>
+			| Promise<Result<A, unknown>>,
 	): AsyncResult<A, unknown> {
 		return new AsyncResult(
 			this.promise.then(async (result) => {
 				if (result.isErr()) {
-					const next = fn(result.error);
+					const next = normalizeChainResult(fn(result.error));
 					if (next instanceof AsyncResult) {
 						return next.promise;
 					}
@@ -439,7 +434,7 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 				}
 				return result;
 			}),
-		);
+		) as AsyncResult<A, unknown>;
 	}
 
 	/**
@@ -534,12 +529,12 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 		try: () => Promise<T>;
 		catch: (cause: unknown) => E;
 	}): AsyncResult<T, E>;
-	static tryPromise<T, E = Error>(fn: () => Promise<T>): AsyncResult<T, E>;
-	static tryPromise<T, E = Error>(
+	static tryPromise<T>(fn: () => Promise<T>): AsyncResult<T, Error>;
+	static tryPromise<T, E>(
 		args:
 			| { try: () => Promise<T>; catch: (cause: unknown) => E }
 			| (() => Promise<T>),
-	): AsyncResult<T, E> {
+	): AsyncResult<T, E> | AsyncResult<T, Error> {
 		if (typeof args === "object" && "try" in args) {
 			return new AsyncResult(
 				args
@@ -550,10 +545,9 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
 		}
 		return new AsyncResult(
 			args()
-				.then((value) => new Ok<T, E>(value))
+				.then((value) => new Ok<T, Error>(value))
 				.catch(
-					(cause) =>
-						new Err<E>(new Error("Unexpected exception", { cause }) as E),
+					(cause) => new Err(new Error("Unexpected exception", { cause })),
 				),
 		);
 	}
@@ -570,7 +564,7 @@ export class AsyncResult<A, E> implements PromiseLike<Result<A, E>> {
  * const result = Result.ok(42);
  * ```
  */
-function ok<T, E = never>(value: T): Result<T, E> {
+function ok<T, E = never>(value: T): Ok<T, E> {
 	return new Ok(value);
 }
 
@@ -585,7 +579,7 @@ function ok<T, E = never>(value: T): Result<T, E> {
  * const result = Result.err("not found");
  * ```
  */
-function err<E, T = never>(error: E): Result<T, E> {
+function err<E, T = never>(error: E): Err<E, T> {
 	return new Err(error);
 }
 
@@ -607,31 +601,37 @@ function err<E, T = never>(error: E): Result<T, E> {
  * const result = Result.try(() => JSON.parse(input));
  * ```
  */
-function tryCatch<T, E = Error>(handlers: {
+function tryCatchWithHandler<T, E>(handlers: {
+	try: () => T;
+	catch: (cause: unknown) => E;
+}): Result<T, E> {
+	try {
+		return Result.ok(handlers.try());
+	} catch (cause) {
+		return Result.err(handlers.catch(cause));
+	}
+}
+
+function tryCatchDefault<T>(fn: () => T): Result<T, Error> {
+	try {
+		return Result.ok(fn());
+	} catch (cause) {
+		return Result.err(new Error("Unexpected exception", { cause }));
+	}
+}
+
+function tryCatch<T, E>(handlers: {
 	try: () => T;
 	catch: (cause: unknown) => E;
 }): Result<T, E>;
-function tryCatch<T, E = Error>(fn: () => T): Result<T, E>;
-function tryCatch<T, E = Error>(
+function tryCatch<T>(fn: () => T): Result<T, Error>;
+function tryCatch<T, E>(
 	args: { try: () => T; catch: (cause: unknown) => E } | (() => T),
-): Result<T, E> {
+): Result<T, E> | Result<T, Error> {
 	if (typeof args === "object" && "try" in args) {
-		try {
-			return Result.ok(args.try());
-		} catch (cause) {
-			return Result.err(args.catch(cause));
-		}
+		return tryCatchWithHandler(args);
 	}
-
-	try {
-		return Result.ok(args());
-	} catch (cause) {
-		// SAFETY: The caller did not pass a catch handler so E defaults to type of Error
-		return Result.err(new Error("Unexpected exception", { cause })) as Result<
-			T,
-			E
-		>;
-	}
+	return tryCatchDefault(args);
 }
 /**
  * Convert array of Results to Result of array. Fails on first error.

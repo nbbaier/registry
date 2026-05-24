@@ -329,6 +329,13 @@ describe("AsyncResult", () => {
 			expect(result.isOk() && result.value).toBe(6);
 		});
 
+		it("chains with Promise<Result>", async () => {
+			const result = await Result.okAsync(2).andThen(async (x) =>
+				Result.ok(x * 3),
+			);
+			expect(result.isOk() && result.value).toBe(6);
+		});
+
 		it("propagates error", async () => {
 			const result = await Result.okAsync(2).andThen(() => Result.err("fail"));
 			expect(result.isErr() && result.error).toBe("fail");
@@ -474,7 +481,7 @@ describe("sync Result async bridging", () => {
 	});
 
 	it("Err.map with async fn returns AsyncResult", async () => {
-		const result = await Result.err<string, number>("fail").map(
+		const result = await Result.errAsync<string, number>("fail").map(
 			async (x) => x * 2,
 		);
 		expect(result.isErr() && result.error).toBe("fail");
@@ -491,8 +498,8 @@ describe("sync Result async bridging", () => {
 	});
 
 	it("Err.andThen with async fn returns AsyncResult", async () => {
-		const result = await Result.err<string, number>("fail").andThen(async (x) =>
-			Result.ok(x * 2),
+		const result = await Result.errAsync<string, number>("fail").andThen(
+			async (x) => Result.ok(x * 2),
 		);
 		expect(result.isErr() && result.error).toBe("fail");
 	});
