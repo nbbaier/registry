@@ -6,12 +6,7 @@
 		"moduleResolution": "bundler",
 		"strict": true,
 		"skipLibCheck": true,
-		"noEmit": true,
-		"paths": {
-			"@/lib/*": ["./registry/default/lib/*"],
-			"@/components/*": ["./src/components/*"],
-			"@/hooks/*": ["./src/hooks/*"]
-		}
+		"noEmit": true
 	},
-	"include": ["registry/**/*.ts", "scripts/**/*.ts"]
+	"include": ["utils/**/*.ts", "scripts/**/*.ts"]
 }
