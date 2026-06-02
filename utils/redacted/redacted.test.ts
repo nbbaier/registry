@@ -54,7 +54,7 @@ describe("Redacted Production-Grade Safety", () => {
 			const count = 10_000;
 			const start = performance.now();
 
-			const items = [];
+			const items: Redacted<number>[] = [];
 			for (let i = 0; i < count; i++) {
 				items.push(Redacted.make(i));
 			}

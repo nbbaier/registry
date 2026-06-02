@@ -10,7 +10,7 @@
 			"description": "Option type for representing optional values without null/undefined",
 			"files": [
 				{
-					"path": "registry/default/lib/option.ts",
+					"path": "utils/option/option.ts",
 					"type": "registry:file",
 					"target": "~/lib/option.ts"
 				}
@@ -23,7 +23,7 @@
 			"description": "Result type for typed error handling without exceptions",
 			"files": [
 				{
-					"path": "registry/default/lib/result.ts",
+					"path": "utils/result/result.ts",
 					"type": "registry:file",
 					"target": "~/lib/result.ts"
 				}
@@ -36,7 +36,7 @@
 			"description": "Mixin factory for discriminated error classes with typed props",
 			"files": [
 				{
-					"path": "registry/default/lib/tagged-error.ts",
+					"path": "utils/tagged-error/tagged-error.ts",
 					"type": "registry:file",
 					"target": "~/lib/tagged-error.ts"
 				}
@@ -49,7 +49,7 @@
 			"description": "Branded type preventing sensitive data from logging/serialization",
 			"files": [
 				{
-					"path": "registry/default/lib/redacted.ts",
+					"path": "utils/redacted/redacted.ts",
 					"type": "registry:file",
 					"target": "~/lib/redacted.ts"
 				}
