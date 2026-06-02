@@ -17,11 +17,11 @@ One installable unit in the registry — a named bundle of source files plus met
 _Avoid_: Component, package, snippet
 
 **Lib item**:
-A registry item of type `registry:lib` — TypeScript utilities (e.g. `Option`, `Result`) with no UI, hooks, or styling dependencies.
+A registry item of type `registry:item` — TypeScript utilities (e.g. `Option`, `Result`) with no UI, hooks, or styling dependencies.
 _Avoid_: Utility, helper, module
 
 **Lib source**:
-The TypeScript file you author and maintain (e.g. `registry/default/lib/option.ts`). One lib source maps to one lib item, and is the exact file consumers receive — there is no generated intermediate.
+The TypeScript file you author and maintain (e.g. `utils/option/option.ts`). One lib source maps to one lib item, and is the exact file consumers receive — there is no generated intermediate.
 _Avoid_: Snippet, module
 
 **Item address**:
@@ -45,19 +45,19 @@ The always-latest model — installing an item without a ref always fetches the 
 _Avoid_: Release, semver tag
 
 **Lib import alias**:
-The import path convention for cross-item references in lib source — `@/lib/<item-name>`. Matches where installed files land in consumer projects and aligns with shadcn registry authoring conventions.
-_Avoid_: Relative import, registry path
+The import path convention in **consumer** projects after install — `@/lib/<item-name>` when configured via the consumer's shadcn aliases. In the registry repo, cross-item references use relative imports between `utils/` directories (e.g. `../tagged-error/tagged-error`).
+_Avoid_: Registry repo path, install path
 
 **npm dependency**:
 An external package a lib item requires, declared in the item's `dependencies` field (e.g. `"zod@^3.0.0"`). The shadcn CLI installs these in the consumer project. Distinct from registry dependencies, which reference other lib items in this registry.
 _Avoid_: Registry dependency, import
 
 **Lib test**:
-A co-located Vitest test file for a lib source (e.g. `option.test.ts` next to `option.ts`). Validates lib source in the registry repo; never listed in an item's `files`, so it never reaches consumers.
+A co-located Vitest test file for a lib source (e.g. `utils/option/option.test.ts` next to `option.ts`). Validates lib source in the registry repo; never listed in an item's `files`, so it never reaches consumers.
 _Avoid_: Unit test, spec file
 
 **Registry repo**:
-The flat project layout at repo root — `registry.json` as the catalog, `registry/default/lib/` for sources. No build output directory, no `wrangler.jsonc`, no nested monorepo structure.
+The flat project layout at repo root — `registry.json` as the catalog, `utils/<item-name>/` for lib sources and co-located tests. No build output directory, no `wrangler.jsonc`, no nested monorepo structure.
 _Avoid_: Monorepo, workspace
 
 **Registry CI**:
@@ -88,12 +88,8 @@ _Avoid_: License notice, copyright block
 MIT license on the registry repo, governing distribution of lib items from this registry. Distinct from port provenance — provenance credits mulroy.dev; MIT covers your distribution terms.
 _Avoid_: SPDX, copyright
 
-**Registry alias config**:
-Minimal `components.json` plus tsconfig path aliases that map `@/lib/*` to `registry/default/lib/*`. Lets local tooling and Vitest resolve lib import aliases without Tailwind or UI scaffolding.
-_Avoid_: shadcn config, tsconfig paths
-
 **Local dev loop**:
-Test, lint, validate — `bun test`, `bun run lint`, then `bun run validate` to confirm `registry.json` is valid and every referenced source file exists before pushing.
+Test, lint, validate — `bun run test` (Vitest), `bun run lint`, then `bun run validate` to confirm `registry.json` is valid and every referenced source file exists before pushing.
 _Avoid_: Dev server, hot reload, preview
 
 **Registry linting**:
@@ -116,7 +112,7 @@ _Avoid_: tsconfig, compiler options
 
 **Dev**: I'm adding a new `Option` type to the registry.
 
-**Expert**: That's a lib item — one registry item, one file under `registry/default/lib/`. Consumers run `npx shadcn add nbbaier/registry/option` and get the file merged into their project's lib directory per their `components.json` aliases. No namespace setup on their end.
+**Expert**: That's a lib item — one registry item, one source file under `utils/option/option.ts` (listed in `registry.json`). Consumers run `npx shadcn add nbbaier/registry/option` and get `lib/option.ts` at the install `target`. No registry-repo `components.json` — consumers bring their own alias config if they use `@/lib` imports.
 
 **Dev**: Should I also ship a `useOption` hook?
 
@@ -132,7 +128,7 @@ _Avoid_: tsconfig, compiler options
 
 **Dev**: How should `result.ts` import `TaggedError` in the registry source?
 
-**Expert**: Use the lib import alias: `import { TaggedError } from "@/lib/tagged-error"`. The shadcn CLI resolves it against the consumer's `components.json` aliases on install.
+**Expert**: In this repo, use a relative import: `import { TaggedError } from "../tagged-error/tagged-error"`. After install, consumers can use `@/lib/tagged-error` if their project defines that alias — the shadcn CLI maps paths on their side, not in the registry source tree.
 
 **Dev**: Can lib items pull in npm packages like `zod`?
 
@@ -164,7 +160,7 @@ _Avoid_: tsconfig, compiler options
 
 **Dev**: Is there any build output to gitignore?
 
-**Expert**: No. The repo is the registry — no `public/r/`, no generated JSON. The source files in `registry/default/lib/` are exactly what consumers receive.
+**Expert**: No. The repo is the registry — no `public/r/`, no generated JSON. The files under `utils/` referenced by `registry.json` are exactly what consumers receive (at the install `target` path).
 
 **Dev**: How do we credit mulroy.dev for the ported lib items?
 

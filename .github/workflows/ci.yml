@@ -23,7 +23,7 @@ jobs:
         run: bun run typecheck
 
       - name: Test
-        run: bun test
+        run: bun run test
 
       - name: Validate registry
         run: bun run validate

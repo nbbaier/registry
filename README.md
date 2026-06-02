@@ -55,7 +55,7 @@ The v1 items (`option`, `result`, `tagged-error`) are adapted from [mulroy.dev](
 
 ```bash
 bun install
-bun test          # run Vitest
+bun run test      # Vitest
 bun run typecheck # strict TypeScript
 bun run lint      # Biome check
 bun run validate  # validate registry.json against the shadcn schema
@@ -63,9 +63,9 @@ bun run validate  # validate registry.json against the shadcn schema
 
 ### Adding a new item
 
-1. Create `registry/default/lib/<name>.ts` and optional `<name>.test.ts`.
+1. Create `utils/<name>/<name>.ts` and optional `utils/<name>/<name>.test.ts`.
 2. Add an entry to `registry.json`. Use `"type": "registry:item"` for the item, and a file of `"type": "registry:file"` with both a `path` (the source file) and a `target` (where it installs, e.g. `~/lib/<name>.ts`). The `target` is required for `registry:file` — it's what lets the item install without a `components.json`.
-3. Run `bun test`, `bun run lint`, and `bun run validate`.
+3. Run `bun run test`, `bun run lint`, and `bun run validate`.
 4. Push to `main` — the item is immediately installable from GitHub.
 
 There is no build or deploy step: the repository **is** the registry. Consumers fetch source files straight from GitHub when they run `shadcn add`.
