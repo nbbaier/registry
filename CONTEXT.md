@@ -172,11 +172,11 @@ _Avoid_: tsconfig, compiler options
 
 **Dev**: Do we need a full shadcn project setup in the registry repo?
 
-**Expert**: No. Minimal `components.json` for the `@/lib` alias, plus tsconfig paths mapping `@/lib/*` to `registry/default/lib/*`. Enough for local tooling and Vitest — no Tailwind or UI config.
+**Expert**: No shadcn UI scaffold — no `components.json` in this repo. `tsconfig.json` includes `utils/**/*.ts`; Vitest runs `utils/**/*.test.ts`. Use relative imports between items under `utils/`.
 
 **Dev**: How do I verify changes locally before pushing?
 
-**Expert**: `bun test`, `bun run lint`, then `bun run validate`. Validation confirms `registry.json` is well-formed and every referenced source file exists — the same checks the CLI runs before a consumer installs.
+**Expert**: `bun run test`, `bun run lint`, then `bun run validate`. Validation confirms `registry.json` is well-formed and every referenced source file exists — the same checks the CLI runs before a consumer installs.
 
 **Dev**: Do we need a linter?
 
