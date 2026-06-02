@@ -34,7 +34,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["registry/default/lib/**"],
+			"includes": ["utils/**"],
 			"linter": {
 				"rules": {
 					"suspicious": {
