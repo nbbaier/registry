@@ -5,49 +5,53 @@
 	"items": [
 		{
 			"name": "option",
-			"type": "registry:lib",
+			"type": "registry:item",
 			"title": "Option",
 			"description": "Option type for representing optional values without null/undefined",
 			"files": [
 				{
 					"path": "registry/default/lib/option.ts",
-					"type": "registry:lib"
+					"type": "registry:file",
+					"target": "~/lib/option.ts"
 				}
 			]
 		},
 		{
 			"name": "result",
-			"type": "registry:lib",
+			"type": "registry:item",
 			"title": "Result",
 			"description": "Result type for typed error handling without exceptions",
 			"files": [
 				{
 					"path": "registry/default/lib/result.ts",
-					"type": "registry:lib"
+					"type": "registry:file",
+					"target": "~/lib/result.ts"
 				}
 			]
 		},
 		{
 			"name": "tagged-error",
-			"type": "registry:lib",
+			"type": "registry:item",
 			"title": "TaggedError",
 			"description": "Mixin factory for discriminated error classes with typed props",
 			"files": [
 				{
 					"path": "registry/default/lib/tagged-error.ts",
-					"type": "registry:lib"
+					"type": "registry:file",
+					"target": "~/lib/tagged-error.ts"
 				}
 			]
 		},
 		{
 			"name": "redacted",
-			"type": "registry:lib",
+			"type": "registry:item",
 			"title": "Redacted",
 			"description": "Branded type preventing sensitive data from logging/serialization",
 			"files": [
 				{
 					"path": "registry/default/lib/redacted.ts",
-					"type": "registry:lib"
+					"type": "registry:file",
+					"target": "~/lib/redacted.ts"
 				}
 			]
 		}
