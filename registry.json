@@ -12,6 +12,19 @@
 				{
 					"path": "utils/option/option.ts",
 					"type": "registry:file",
+					"target": "@/lib/option.ts"
+				}
+			]
+		},
+		{
+			"name": "option-lib",
+			"type": "registry:lib",
+			"title": "Option",
+			"description": "Option type for representing optional values without null/undefined",
+			"files": [
+				{
+					"path": "utils/option/option.ts",
+					"type": "registry:file",
 					"target": "~/lib/option.ts"
 				}
 			]
