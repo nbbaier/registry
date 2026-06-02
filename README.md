@@ -1,32 +1,30 @@
-A personal [shadcn-compatible registry](https://ui.shadcn.com/docs/registry) for TypeScript utility libraries. Install lib items into any project with the shadcn CLI.
-
-**Live endpoint:** `https://nbbaier-registry.nico-baier.workers.dev`
+A personal [shadcn-compatible registry](https://ui.shadcn.com/docs/registry) for TypeScript utility libraries, served directly from this public GitHub repository. Install lib items into any project with the shadcn CLI.
 
 ## Install
 
-Add the registry namespace to your project's `components.json`:
-
-```json
-{
-   "registries": {
-      "@nbbaier": "https://nbbaier-registry.nico-baier.workers.dev/r/{name}.json"
-   }
-}
-```
-
-Install a lib item:
+Install a lib item directly from GitHub — no namespace or `components.json` setup required:
 
 ```bash
-npx shadcn add @nbbaier/option
-```
-
-Or install directly by URL:
-
-```bash
-npx shadcn add https://nbbaier-registry.nico-baier.workers.dev/r/option.json
+npx shadcn@latest add nbbaier/registry/option
 ```
 
 Installed files land in your project's lib directory per your `components.json` aliases (typically `src/lib/`).
+
+Pin to a branch, tag, or commit SHA with `#ref`:
+
+```bash
+npx shadcn@latest add nbbaier/registry/option#main
+npx shadcn@latest add nbbaier/registry/option#v1.0.0
+```
+
+### Browse and inspect
+
+```bash
+npx shadcn@latest list nbbaier/registry                 # list every item
+npx shadcn@latest search nbbaier/registry -q option     # search the catalog
+npx shadcn@latest view nbbaier/registry/option          # inspect an item payload
+npx shadcn@latest add nbbaier/registry/option --dry-run # preview without writing
+```
 
 ## Available lib items
 
@@ -45,29 +43,20 @@ The v1 lib items (`option`, `result`, `tagged-error`, `redacted`) are adapted fr
 
 ```bash
 bun install
-bun test                  # run Vitest
-bun run typecheck         # strict TypeScript
-bun run lint              # Biome check
-bun run registry:build    # build artifacts to public/r/
-bun run preview           # serve public/ locally via wrangler dev
-bun run smoke             # verify shadcn add works against built option.json
+bun test          # run Vitest
+bun run typecheck # strict TypeScript
+bun run lint      # Biome check
+bun run validate  # validate registry.json against the shadcn schema
 ```
 
 ### Adding a new lib item
 
 1. Create `registry/default/lib/<name>.ts` and optional `<name>.test.ts`
-2. Add an entry to `registry.json`
-3. Run `bun test`, `bun run registry:build`, and `bun run smoke`
-4. Push to `main` — CI deploys automatically
+2. Add an entry to `registry.json` whose `files[].path` points at the source file
+3. Run `bun test`, `bun run lint`, and `bun run validate`
+4. Push to `main` — the item is immediately installable from GitHub
 
-### Deploy
-
-CI deploys to Cloudflare on push to `main`. Required GitHub Actions secrets:
-
-- `CLOUDFLARE_API_TOKEN` — Workers deploy permissions
-- `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID
-
-The live URL is set in `registry.json` as `homepage` and should match the deployed workers.dev subdomain.
+There is no build or deploy step: the repository **is** the registry. Consumers fetch source files straight from GitHub when they run `shadcn add`.
 
 ## License
 
