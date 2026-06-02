@@ -25,7 +25,7 @@
 				{
 					"path": "utils/option/option.ts",
 					"type": "registry:file",
-					"target": "~/lib/option.ts"
+					"target": "@/lib/option.ts"
 				}
 			]
 		},
