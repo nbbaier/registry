@@ -1,11 +1,12 @@
-name: Deploy
+name: CI
 
 on:
   push:
     branches: [main]
+  pull_request:
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,14 +25,5 @@ jobs:
       - name: Test
         run: bun test
 
-      - name: Build registry
-        run: bun run registry:build
-
-      - name: Smoke test
-        run: bun run smoke
-
-      - name: Deploy to Cloudflare
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Validate registry
+        run: bun run validate

@@ -6,7 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!node_modules", "!public", "!.wrangler"],
+		"includes": ["**", "!node_modules"],
 		"ignoreUnknown": false
 	},
 	"formatter": {
