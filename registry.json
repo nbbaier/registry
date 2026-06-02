@@ -18,7 +18,7 @@
 		},
 		{
 			"name": "option-lib",
-			"type": "registry:lib",
+			"type": "registry:item",
 			"title": "Option",
 			"description": "Option type for representing optional values without null/undefined",
 			"files": [
